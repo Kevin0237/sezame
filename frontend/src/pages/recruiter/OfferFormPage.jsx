@@ -4,13 +4,11 @@ import { Card } from '@/components/ui/Card'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { api } from '@/api/client'
-import { useAuth } from '@/context/AuthContext'
 
 export function OfferFormPage() {
   const { id } = useParams()
   const isEdit = Boolean(id)
   const navigate = useNavigate()
-  const { user } = useAuth()
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -50,10 +48,6 @@ export function OfferFormPage() {
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (user?.verificationStatus !== 'verified') {
-      setError('Entreprise non vérifiée — publication bloquée.')
-      return
-    }
     if (!form.minSalary || !form.maxSalary) {
       setError('La fourchette de salaire est obligatoire.')
       return

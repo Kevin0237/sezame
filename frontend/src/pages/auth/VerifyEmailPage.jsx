@@ -1,21 +1,59 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { MailCheck } from 'lucide-react'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { useAuth } from '@/context/AuthContext'
+import { api } from '@/api/client'
 
 export function VerifyEmailPage() {
   const location = useLocation()
-  const navigate = useNavigate()
-  const { user, updateUser } = useAuth()
-  const email = location.state?.email || user?.email || 'votre adresse'
+  const [searchParams] = useSearchParams()
+  const tokenFromUrl = searchParams.get('token')
+  const email = location.state?.email || 'votre adresse'
 
-  function simulateVerify() {
-    updateUser({ emailVerified: true })
-    if (user?.role === 'recruiter') navigate('/app/recruiter/onboarding')
-    else if (user?.role === 'student') navigate('/app/student/onboarding')
-    else navigate('/login')
+  const [status, setStatus] = useState(tokenFromUrl ? 'verifying' : 'waiting')
+  const [message, setMessage] = useState('')
+  const [resending, setResending] = useState(false)
+
+  useEffect(() => {
+    if (!tokenFromUrl) return
+
+    let cancelled = false
+    api.auth
+      .verifyEmail({ token: tokenFromUrl })
+      .then((res) => {
+        if (!cancelled) {
+          setStatus('success')
+          setMessage(res.message)
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setStatus('error')
+          setMessage(err.message)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [tokenFromUrl])
+
+  async function handleResend() {
+    if (!email || email === 'votre adresse') {
+      setMessage('Connectez-vous depuis la page d’inscription pour renvoyer l’e-mail.')
+      return
+    }
+    setResending(true)
+    try {
+      const res = await api.auth.resendVerification({ email })
+      setMessage(res.message)
+    } catch (err) {
+      setMessage(err.message)
+    } finally {
+      setResending(false)
+    }
   }
 
   return (
@@ -25,17 +63,68 @@ export function VerifyEmailPage() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-peach">
             <MailCheck className="h-7 w-7 text-primary-dark" />
           </div>
-          <h1 className="font-heading text-2xl font-bold">Vérifiez votre e-mail</h1>
-          <p className="mt-3 text-sm text-text-muted">
-            Nous avons envoyé un lien de confirmation à <strong>{email}</strong>. Ouvrez-le pour
-            activer votre compte.
-          </p>
-          <Button variant="strong" className="mt-8 w-full" onClick={simulateVerify}>
-            J’ai vérifié mon e-mail (démo)
-          </Button>
-          <Link to="/login" className="mt-4 inline-block text-sm text-primary-dark">
-            Retour à la connexion
-          </Link>
+
+          {status === 'verifying' && (
+            <>
+              <h1 className="font-heading text-2xl font-bold">Vérification en cours…</h1>
+              <p className="mt-3 text-sm text-text-muted">Merci de patienter.</p>
+            </>
+          )}
+
+          {status === 'waiting' && (
+            <>
+              <h1 className="font-heading text-2xl font-bold">Vérifiez votre e-mail</h1>
+              <p className="mt-3 text-sm text-text-muted">
+                Nous avons envoyé un lien de confirmation à <strong>{email}</strong>. Ouvrez-le
+                pour activer votre compte.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-6 w-full"
+                onClick={handleResend}
+                disabled={resending}
+              >
+                {resending ? 'Envoi…' : 'Renvoyer l’e-mail'}
+              </Button>
+            </>
+          )}
+
+          {status === 'success' && (
+            <>
+              <h1 className="font-heading text-2xl font-bold">E-mail confirmé</h1>
+              <p className="mt-3 text-sm text-text-muted">{message}</p>
+              <Link to="/login" className="mt-6 inline-block w-full">
+                <Button variant="strong" className="w-full">
+                  Se connecter
+                </Button>
+              </Link>
+            </>
+          )}
+
+          {status === 'error' && (
+            <>
+              <h1 className="font-heading text-2xl font-bold">Lien invalide</h1>
+              <p className="mt-3 text-sm text-danger-text">{message}</p>
+              <Button
+                variant="outline"
+                className="mt-6 w-full"
+                onClick={handleResend}
+                disabled={resending}
+              >
+                Renvoyer un lien
+              </Button>
+            </>
+          )}
+
+          {message && status === 'waiting' && (
+            <p className="mt-4 text-xs text-text-muted">{message}</p>
+          )}
+
+          {status !== 'success' && (
+            <Link to="/login" className="mt-4 inline-block text-sm text-primary-dark">
+              Retour à la connexion
+            </Link>
+          )}
         </Card>
       </div>
     </PublicLayout>

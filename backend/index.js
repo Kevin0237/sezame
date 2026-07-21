@@ -1,21 +1,11 @@
-// backend/index.js
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+require('dotenv').config()
+const { createApp } = require('./src/app')
+const { env } = require('./src/config/env')
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+const app = createApp()
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
-
-// Route de test
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Sezame API is running' });
-});
-
-// Démarrer le serveur
-app.listen(PORT, () => {
-  console.log(`✅ Backend Sezame en écoute sur http://localhost:${PORT}`);
-});
+app.listen(env.port, () => {
+  console.log(`Sezame API listening on http://localhost:${env.port}`)
+  console.log(`Health: http://localhost:${env.port}/api/health`)
+  console.log(`API v1: http://localhost:${env.port}/api/v1`)
+})

@@ -4,7 +4,9 @@ Authentification : Toutes les routes sauf auth/register et auth/login nécessite
 
 #	User Story	Méthode	Endpoint	Description	Corps de la requête (body) / Paramètres	Réponse succès (exemple)
 🔐 AUTHENTIFICATION						
-1	US-01	POST	/auth/register	Inscription étudiant ou recruteur	{ "email": "aicha@email.com", "password": "secret123", "role": "student" }	{ "id": "uuid", "email": "aicha@email.com", "role": "student" }
+1	US-01	POST	/auth/register	Inscription étudiant ou recruteur (e-mail non vérifié)	{ "email": "aicha@email.com", "password": "secret123", "role": "student" }	{ "id": "uuid", "email": "aicha@email.com", "role": "student", "emailVerified": false, "message": "..." }
+1b	US-01	POST	/auth/verify-email	Confirmer l'e-mail via token	{ "token": "hex..." } ou GET ?token=...	{ "message": "E-mail vérifié...", "user": { "emailVerified": true } }
+1c	US-01	POST	/auth/resend-verification	Renvoyer l'e-mail de confirmation	{ "email": "aicha@email.com" }	{ "message": "..." }
 2	US-02	POST	/auth/login	Connexion et réception du token JWT	{ "email": "aicha@email.com", "password": "secret123" }	{ "token": "jwt_token_here", "user": { "id": "...", "role": "student" } }
 3	US-02	POST	/auth/logout	Déconnexion (invalider token côté client)	(aucun body)	{ "message": "Logged out successfully" }
 👤 PROFIL ÉTUDIANT						

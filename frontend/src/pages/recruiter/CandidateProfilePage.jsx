@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, MapPin } from 'lucide-react'
+import { ArrowLeft, MapPin, ExternalLink } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { api } from '@/api/client'
@@ -71,6 +71,16 @@ export function CandidateProfilePage() {
               <div className="p-4">
                 <h3 className="font-semibold">{a.title}</h3>
                 <p className="text-sm text-text-muted">{a.description}</p>
+                {a.projectUrl && (
+                  <a
+                    href={a.projectUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 text-sm text-primary transition hover:underline"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> Voir le projet
+                  </a>
+                )}
               </div>
             </Card>
           ))}

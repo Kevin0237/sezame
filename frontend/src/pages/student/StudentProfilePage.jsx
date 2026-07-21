@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Pencil, Plus } from 'lucide-react'
+import { MapPin, Pencil, Plus, Trash2, ExternalLink } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -15,6 +15,17 @@ export function StudentProfilePage() {
   useEffect(() => {
     api.profile.getMe().then(setProfile).catch(() => {})
   }, [])
+
+  async function handleDeleteAchievement(id) {
+    if (!window.confirm('Supprimer cette réalisation ?')) return
+    try {
+      await api.profile.deleteAchievement(id)
+      setProfile((prev) => ({
+        ...prev,
+        achievements: prev.achievements.filter((a) => a.id !== id),
+      }))
+    } catch {}
+  }
 
   if (!profile) {
     return <p className="text-text-muted">Chargement du profil…</p>
@@ -51,6 +62,22 @@ export function StudentProfilePage() {
             <Pencil className="h-4 w-4" /> Éditer mon profil
           </Button>
         </Link>
+      </Card>
+
+      <Card className="mt-4 p-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium">Complétion du profil</span>
+          <span className="font-bold text-primary-dark">{profile.completionScore ?? 0}%</span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-border">
+          <div
+            className="h-full rounded-full bg-primary-dark transition-all"
+            style={{ width: `${profile.completionScore ?? 0}%` }}
+          />
+        </div>
+        <p className="mt-2 text-xs text-text-muted">
+          Complétez votre portfolio pour plus de visibilité auprès des recruteurs.
+        </p>
       </Card>
 
       <section className="mt-8">
@@ -116,8 +143,27 @@ export function StudentProfilePage() {
                   <img src={a.imageUrl} alt="" className="h-40 w-full object-cover" />
                 )}
                 <div className="p-4">
-                  <h3 className="font-heading font-semibold">{a.title}</h3>
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-heading font-semibold">{a.title}</h3>
+                    <button
+                      onClick={() => handleDeleteAchievement(a.id)}
+                      className="shrink-0 rounded p-1 text-text-muted transition hover:bg-danger/10 hover:text-danger-text"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                   <p className="mt-1 text-sm text-text-muted">{a.description}</p>
+                  {a.projectUrl && (
+                    <a
+                      href={a.projectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 text-sm text-primary transition hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> Voir le projet
+                    </a>
+                  )}
                 </div>
               </Card>
             ))}

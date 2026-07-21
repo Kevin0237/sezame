@@ -18,8 +18,16 @@ export const api = {
 
   auth: {
     register: (body) => (useMock ? mockApi.register(body) : httpApi.register(body)),
+    verifyEmail: (body) =>
+      useMock
+        ? Promise.resolve({ message: 'E-mail vérifié (mock).' })
+        : httpApi.verifyEmail(body),
+    resendVerification: (body) =>
+      useMock
+        ? Promise.resolve({ message: 'E-mail renvoyé (mock).' })
+        : httpApi.resendVerification(body),
     login: (body) => (useMock ? mockApi.login(body) : httpApi.login(body)),
-    logout: () => (useMock ? mockApi.logout() : httpApi.logout()),
+    logout: (refreshToken) => (useMock ? mockApi.logout() : httpApi.logout(refreshToken)),
   },
 
   profile: {
@@ -38,7 +46,11 @@ export const api = {
     getCandidate: (userId) =>
       useMock
         ? mockApi.getCandidateProfile(userId)
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.getCandidate(userId),
+    uploadImage: (file) =>
+      useMock
+        ? Promise.resolve({ url: URL.createObjectURL(file) })
+        : httpApi.uploadImage(file),
   },
 
   offers: {
@@ -66,7 +78,7 @@ export const api = {
     get: (id) =>
       useMock
         ? mockApi.getApplication(requireUserId(), id)
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.getApplication(id),
     updateStatus: (id, body) =>
       useMock
         ? mockApi.updateApplicationStatus(requireUserId(), id, body)
@@ -74,7 +86,7 @@ export const api = {
     listForOffer: (offerId) =>
       useMock
         ? mockApi.listOfferApplications(offerId)
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.listOfferApplications(offerId),
   },
 
   company: {
@@ -87,7 +99,7 @@ export const api = {
     update: (body) =>
       useMock
         ? mockApi.updateCompany(requireUserId(), body)
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.updateCompany(body),
   },
 
   admin: {
@@ -103,15 +115,15 @@ export const api = {
     listAccounts: (params) =>
       useMock
         ? mockApi.listAccounts(params)
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.listAccounts(params),
     setAccountDisabled: (userId, disabled) =>
       useMock
         ? mockApi.setAccountDisabled(userId, disabled)
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.setAccountDisabled(userId, disabled),
     getDashboard: () =>
       useMock
         ? mockApi.getAdminDashboard()
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.getDashboard(),
   },
 
   notifications: {
@@ -129,13 +141,13 @@ export const api = {
     recruiter: () =>
       useMock
         ? mockApi.getRecruiterDashboard(requireUserId())
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.getRecruiterDashboard(),
   },
 
   recruiter: {
     listOffers: () =>
       useMock
         ? mockApi.listCompanyOffers(requireUserId())
-        : Promise.reject(new Error('Not implemented on HTTP yet')),
+        : httpApi.listCompanyOffers(),
   },
 }

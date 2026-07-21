@@ -4,6 +4,7 @@ import { api } from '@/api/client'
 const AuthContext = createContext(null)
 
 const TOKEN_KEY = 'sezame_token'
+const REFRESH_KEY = 'sezame_refresh_token'
 const USER_KEY = 'sezame_user'
 
 export function AuthProvider({ children }) {
@@ -34,6 +35,7 @@ export function AuthProvider({ children }) {
       try {
         const res = await api.auth.login({ email, password })
         setToken(res.token)
+        if (res.refreshToken) localStorage.setItem(REFRESH_KEY, res.refreshToken)
         setUser(res.user)
         return res.user
       } finally {
@@ -44,36 +46,26 @@ export function AuthProvider({ children }) {
     async function register(payload) {
       setLoading(true)
       try {
-        await api.auth.register(payload)
-        return login(payload.email, payload.password)
+        const result = await api.auth.register(payload)
+        return result
       } finally {
         setLoading(false)
       }
     }
 
     async function logout() {
+      const refreshToken = localStorage.getItem(REFRESH_KEY)
       try {
-        await api.auth.logout()
+        await api.auth.logout(refreshToken)
       } finally {
         setToken(null)
         setUser(null)
+        localStorage.removeItem(REFRESH_KEY)
       }
     }
 
     function updateUser(partial) {
       setUser((prev) => (prev ? { ...prev, ...partial } : prev))
-    }
-
-    /** Dev helper: jump into a seeded demo account */
-    async function loginAsDemo(role) {
-      const emails = {
-        student: 'aicha@email.com',
-        studentNew: 'amadou@email.com',
-        recruiter: 'recruteur@globaltech.cm',
-        recruiterPending: 'pending@startup.cm',
-        admin: 'admin@sezame.cm',
-      }
-      return login(emails[role] || emails.student, 'secret123')
     }
 
     return {
@@ -85,7 +77,6 @@ export function AuthProvider({ children }) {
       register,
       logout,
       updateUser,
-      loginAsDemo,
     }
   }, [user, token, loading])
 
